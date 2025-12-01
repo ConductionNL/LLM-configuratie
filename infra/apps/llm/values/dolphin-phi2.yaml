@@ -15,25 +15,25 @@ service:
 
 resources:
   requests:
-    cpu: "2"
-    memory: "4Gi"
-  limits:
     cpu: "4"
-    memory: "8Gi"
+    memory: "12Gi"
+  limits:
+    cpu: "8"
+    memory: "24Gi"
 
 model:
   enabled: true
-  repoId: "TheBloke/dolphin-2.6-phi-2-GGUF"
-  filename: "dolphin-2.6-phi-2.Q4_K_M.gguf"
-  downloadUrl: "https://huggingface.co/TheBloke/dolphin-2.6-phi-2-GGUF/resolve/main/dolphin-2.6-phi-2.Q4_K_M.gguf"
+  repoId: "TheBloke/dolphin-2.6-mistral-7B-GGUF"
+  filename: "dolphin-2.6-mistral-7b.Q4_K_M.gguf"
+  downloadUrl: "https://huggingface.co/TheBloke/dolphin-2.6-mistral-7B-GGUF/resolve/main/dolphin-2.6-mistral-7b.Q4_K_M.gguf"
 
 extraArgs:
   - "-m"
-  - "/models/dolphin-2.6-phi-2.Q4_K_M.gguf"
+  - "/models/dolphin-2.6-mistral-7b.Q4_K_M.gguf"
   - "-c"
   - "4096"
   - "-t"
-  - "4"
+  - "8"
   - "--port"
   - "8080"
   - "--host"
