@@ -1,0 +1,7 @@
+apiVersion: v2
+name: llama-cpp
+description: Minimal Helm chart to run llama.cpp CPU server with optional model download
+type: application
+version: 0.1.0
+appVersion: "server"
+

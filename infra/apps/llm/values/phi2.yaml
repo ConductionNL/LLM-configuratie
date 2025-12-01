@@ -1,0 +1,41 @@
+replicaCount: 1
+
+nodeSelector:
+  llm-node: "true"
+
+tolerations:
+  - key: "llm-only"
+    operator: "Equal"
+    value: "true"
+    effect: "NoSchedule"
+
+service:
+  type: ClusterIP
+  port: 8080
+
+resources:
+  requests:
+    cpu: "2"
+    memory: "4Gi"
+  limits:
+    cpu: "4"
+    memory: "8Gi"
+
+model:
+  enabled: true
+  repoId: "TheBloke/phi-2-GGUF"
+  filename: "phi-2.Q4_K_M.gguf"
+  downloadUrl: ""
+
+extraArgs:
+  - "-m"
+  - "/models/phi-2.Q4_K_M.gguf"
+  - "-c"
+  - "4096"
+  - "-t"
+  - "4"
+  - "--port"
+  - "8080"
+  - "--host"
+  - "0.0.0.0"
+

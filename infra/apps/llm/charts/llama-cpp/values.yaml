@@ -1,0 +1,77 @@
+# Global/basic settings
+replicaCount: 1
+
+image:
+  repository: ghcr.io/ggerganov/llama.cpp
+  tag: server
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+service:
+  type: ClusterIP
+  port: 8080
+
+podAnnotations: {}
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+resources: {}
+  # requests:
+  #   cpu: "2"
+  #   memory: "4Gi"
+  # limits:
+  #   cpu: "4"
+  #   memory: "8Gi"
+
+# Extra environment variables for the server container
+extraEnv: []
+# - name: SOME_ENV
+#   value: some-value
+
+# Additional arguments appended to the llama.cpp server binary
+# Example:
+# extraArgs:
+#   - "-m"
+#   - "/models/model.gguf"
+#   - "-c"
+#   - "4096"
+#   - "-t"
+#   - "4"
+#   - "--port"
+#   - "8080"
+#   - "--host"
+#   - "0.0.0.0"
+extraArgs: []
+
+# Shared models volume
+volume:
+  models:
+    mountPath: /models
+    # sizeLimit: "" # optional (emptyDir)
+
+huggingFace:
+  secretName: hf-token
+  tokenKey: HUGGING_FACE_HUB_TOKEN
+
+model:
+  enabled: true
+  # Either provide repoId+filename or an explicit downloadUrl
+  repoId: ""
+  filename: ""
+  downloadUrl: ""
+
+initDownloader:
+  enabled: true
+  image:
+    repository: curlimages/curl
+    tag: "8.10.1"
+    pullPolicy: IfNotPresent
+
+

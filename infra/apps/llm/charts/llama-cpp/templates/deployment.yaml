@@ -1,0 +1,113 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "llama-cpp.fullname" . }}
+  labels:
+    {{- include "llama-cpp.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "llama-cpp.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "llama-cpp.selectorLabels" . | nindent 8 }}
+      annotations:
+        {{- toYaml .Values.podAnnotations | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+        - name: models
+          emptyDir:
+            {{- if .Values.volume.models.sizeLimit }}
+            sizeLimit: {{ .Values.volume.models.sizeLimit }}
+            {{- end }}
+      {{- if and .Values.model.enabled .Values.initDownloader.enabled }}
+      initContainers:
+        - name: download-model
+          image: "{{ .Values.initDownloader.image.repository }}:{{ .Values.initDownloader.image.tag }}"
+          imagePullPolicy: {{ .Values.initDownloader.image.pullPolicy }}
+          env:
+            - name: HUGGING_FACE_HUB_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.huggingFace.secretName }}
+                  key: {{ .Values.huggingFace.tokenKey }}
+                  optional: true
+            - name: MODEL_REPO
+              value: "{{ .Values.model.repoId }}"
+            - name: MODEL_FILE
+              value: "{{ .Values.model.filename }}"
+            - name: MODEL_URL
+              value: "{{ .Values.model.downloadUrl }}"
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -euo pipefail
+              mkdir -p {{ .Values.volume.models.mountPath }}
+              if [ -n "${MODEL_URL}" ]; then
+                URL="${MODEL_URL}"
+              else
+                if [ -z "${MODEL_REPO}" ] || [ -z "${MODEL_FILE}" ]; then
+                  echo "MODEL_REPO and MODEL_FILE must be provided when MODEL_URL is empty"
+                  exit 1
+                fi
+                URL="https://huggingface.co/${MODEL_REPO}/resolve/main/${MODEL_FILE}"
+              fi
+              HEADER=""
+              if [ -n "${HUGGING_FACE_HUB_TOKEN:-}" ]; then
+                HEADER="Authorization: Bearer ${HUGGING_FACE_HUB_TOKEN}"
+              fi
+              echo "Downloading: ${URL}"
+              if [ -n "${HEADER}" ]; then
+                curl -fL --retry 5 --retry-all-errors -H "${HEADER}" -o "{{ .Values.volume.models.mountPath }}/${MODEL_FILE}" "${URL}"
+              else
+                curl -fL --retry 5 --retry-all-errors -o "{{ .Values.volume.models.mountPath }}/$(basename "${URL}")" "${URL}"
+              fi
+              echo "Download completed."
+          volumeMounts:
+            - name: models
+              mountPath: {{ .Values.volume.models.mountPath }}
+      {{- end }}
+      containers:
+        - name: server
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: HUGGING_FACE_HUB_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.huggingFace.secretName }}
+                  key: {{ .Values.huggingFace.tokenKey }}
+                  optional: true
+          args:
+            {{- range .Values.extraArgs }}
+            - {{ . | quote }}
+            {{- end }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
+          volumeMounts:
+            - name: models
+              mountPath: {{ .Values.volume.models.mountPath }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+

@@ -1,0 +1,41 @@
+replicaCount: 1
+
+nodeSelector:
+  llm-node: "true"
+
+tolerations:
+  - key: "llm-only"
+    operator: "Equal"
+    value: "true"
+    effect: "NoSchedule"
+
+service:
+  type: ClusterIP
+  port: 8080
+
+resources:
+  requests:
+    cpu: "4"
+    memory: "12Gi"
+  limits:
+    cpu: "8"
+    memory: "24Gi"
+
+model:
+  enabled: true
+  repoId: "TheBloke/Mistral-7B-Instruct-v0.2-GGUF"
+  filename: "mistral-7b-instruct-v0.2.Q4_K_M.gguf"
+  downloadUrl: ""
+
+extraArgs:
+  - "-m"
+  - "/models/mistral-7b-instruct-v0.2.Q4_K_M.gguf"
+  - "-c"
+  - "4096"
+  - "-t"
+  - "8"
+  - "--port"
+  - "8080"
+  - "--host"
+  - "0.0.0.0"
+

@@ -1,0 +1,24 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: llm-mistral7b
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/ConductionNL/LLM-configuratie
+    targetRevision: main
+    path: infra/apps/llm/charts/llama-cpp
+    helm:
+      valueFiles:
+        - ../../values/mistral7b.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: llm
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - PruneLast=true
+
