@@ -23,9 +23,9 @@ resources:
 
 model:
   enabled: true
-  repoId: "cognitivecomputations/dolphin-2.6-phi-2-gguf"
+  repoId: "TheBloke/dolphin-2.6-phi-2-GGUF"
   filename: "dolphin-2.6-phi-2.Q4_K_M.gguf"
-  downloadUrl: ""
+  downloadUrl: "https://huggingface.co/TheBloke/dolphin-2.6-phi-2-GGUF/resolve/main/dolphin-2.6-phi-2.Q4_K_M.gguf"
 
 extraArgs:
   - "-m"
