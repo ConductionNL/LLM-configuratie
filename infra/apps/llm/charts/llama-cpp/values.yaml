@@ -2,7 +2,7 @@
 replicaCount: 1
 
 image:
-  repository: ghcr.io/ggerganov/llama.cpp
+  repository: ggerganov/llama.cpp
   tag: server
   pullPolicy: IfNotPresent
 
