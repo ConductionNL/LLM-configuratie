@@ -10,7 +10,7 @@ strategy:
 progressDeadlineSeconds: 1800
 
 image:
-  repository: ggerganov/llama.cpp
+  repository: ghcr.io/ggml-org/llama.cpp
   tag: server
   pullPolicy: IfNotPresent
 
