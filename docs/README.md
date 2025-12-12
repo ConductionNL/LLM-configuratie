@@ -164,6 +164,52 @@ Standaard zijn Services `ClusterIP` en dus alleen in-cluster bereikbaar. Voor ex
     ```
   - Bescherm altijd met TLS en (bij voorkeur) authenticatie of netwerkbeperkingen.
 
+## Operationele alignment (hoe dit samenhangt)
+- GitOps bron van waarheid: deze repo. Argo CD leest `infra/apps/llm/argocd/*.yaml` en rendert Helm chart `infra/apps/llm/charts/llama-cpp` met per-model `values/*.yaml`.
+- Scheduling: standaard generiek (geen node-binding). Indien gewenst, voeg `nodeSelector` en `tolerations` toe per values-file.
+- Rollouts: default RollingUpdate. Voor single-node omgevingen kun je:
+  - Minimale downtime (extra pod): `maxUnavailable: 0`, `maxSurge: 1`
+  - Zero-surge (sequentieel): `maxUnavailable: 1`, `maxSurge: 0`
+- Langdurige init (model-download) kan de standaard progress-deadline overschrijden; deze chart zet een ruime `progressDeadlineSeconds` in om dat te voorkomen.
+
+## Secrets en rotatie (incl. wachtwoorden)
+Deze chart gebruikt géén database. Wel is er een secret voor Hugging Face optioneel:
+
+```bash
+kubectl -n llm create secret generic hf-token \
+  --from-literal=HUGGING_FACE_HUB_TOKEN=<JOUW_HF_TOKEN> \
+  --dry-run=client -o yaml | kubectl apply -f -
+```
+
+Algemene richtlijnen voor secret-rotatie (ook toepasbaar op DB-wachtwoorden voor aanpalende apps):
+1) Maak/patch de Secret met de nieuwe waarde (zoals hierboven) in de juiste namespace.
+2) Forceer een rollout van de workloads die de Secret consumeren, zodat env vars opnieuw geladen worden. Voor deze chart:
+```bash
+kubectl -n llm rollout restart deploy/llm-phi2-llama-cpp
+kubectl -n llm rollout restart deploy/llm-dolphin-phi2-llama-cpp
+kubectl -n llm rollout restart deploy/llm-mistral7b-llama-cpp
+```
+3) Controleer dat pods de nieuwe config hebben en functioneren.
+
+Pattern voor “rollout bij secret-wijziging” zonder handmatig restart:
+- Voeg een annotatie toe in je values, en “bump” die bij wijziging zodat Argo CD een nieuwe PodTemplate afleidt (en dus een rollout triggert). Voorbeeld in een values-file:
+```yaml
+podAnnotations:
+  config/refresh: "2025-12-12-12:00"  # verander timestamp/string bij rotatie
+```
+
+## Primair/secundair database (algemene richtlijn)
+Niet van toepassing op deze chart (llama.cpp heeft geen DB nodig), maar voor applicaties die wél een DB gebruiken:
+- Gebruik voor writes een “primary/write” endpoint (VIP/Service), en voor reads een “read” endpoint indien de app dat ondersteunt.
+- Bewaar DB-credentials in een Kubernetes Secret (per omgeving/namespace).
+- Rotatie zonder downtime (gangbaar patroon):
+  1) Voeg nieuw wachtwoord toe aan de DB (oude blijft tijdelijk geldig).
+  2) Update de Secret in Kubernetes met het nieuwe wachtwoord.
+  3) Forceer rollout van de betrokken Deployments/StatefulSets (zoals hierboven).
+  4) Verifieer dat de app met het nieuwe wachtwoord werkt.
+  5) Verwijder pas daarna het oude wachtwoord uit de DB.
+- Failover primary→secondary gebeurt idealiter in de DB-laag of via de connectiestring (bijv. meerdere hosts). Apps wijzen naar het write-endpoint; bij failover blijft de connectie-URL gelijk.
+
 ## Waarden aanpassen (per model)
 Voor elk model is er een values-file met o.a.:
 
