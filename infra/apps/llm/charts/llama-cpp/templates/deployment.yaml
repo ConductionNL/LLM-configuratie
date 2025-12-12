@@ -6,6 +6,7 @@ metadata:
     {{- include "llama-cpp.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.replicaCount }}
+  progressDeadlineSeconds: {{ .Values.progressDeadlineSeconds }}
   selector:
     matchLabels:
       {{- include "llama-cpp.selectorLabels" . | nindent 6 }}

@@ -7,6 +7,8 @@ strategy:
     maxUnavailable: 0
     maxSurge: 1
 
+progressDeadlineSeconds: 1800
+
 image:
   repository: ggerganov/llama.cpp
   tag: server
