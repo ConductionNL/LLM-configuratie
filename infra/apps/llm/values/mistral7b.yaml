@@ -1,7 +1,7 @@
 replicaCount: 1
 
 nodeSelector:
-  llm-node: "true"
+  role: "llm"
 
 tolerations:
   - key: "llm-only"
