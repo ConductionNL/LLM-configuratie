@@ -6,7 +6,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/ConductionNL/LLM-configuratie.git
+    repoURL: https://github.com/ConductionNL/LLM-configuratie
     targetRevision: main
     path: infra/apps/llm/charts/llama-cpp
     helm:
