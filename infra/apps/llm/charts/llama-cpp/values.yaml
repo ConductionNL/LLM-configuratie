@@ -1,4 +1,4 @@
-# Global/basic settings
+# values.yaml - LLM chart (zorgt dat pods alleen op role=llm gepland worden)
 replicaCount: 1
 
 strategy:
@@ -24,18 +24,36 @@ service:
 
 podAnnotations: {}
 
-nodeSelector: {}
+# --- Scheduling / isolation (belangrijk voor exclusieve llm nodes) ---
+nodeSelector:
+  role: llm
 
-tolerations: []
+tolerations:
+  - key: "llm-only"
+    operator: "Equal"
+    value: "true"
+    effect: "NoSchedule"
 
-affinity: {}
+affinity:
+  podAntiAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchExpressions:
+            - key: app.kubernetes.io/name
+              operator: In
+              values:
+                - llm
+        topologyKey: "kubernetes.io/hostname"
+# ---------------------------------------------------------------
 
+# Resources: laat leeg of stel realistische values in
 resources: {}
+  # Voorbeeld suggestie (activeer indien gewenst):
   # requests:
-  #   cpu: "2"
+  #   cpu: "2000m"
   #   memory: "4Gi"
   # limits:
-  #   cpu: "4"
+  #   cpu: "4000m"
   #   memory: "8Gi"
 
 # Extra environment variables for the server container
@@ -44,18 +62,6 @@ extraEnv: []
 #   value: some-value
 
 # Additional arguments appended to the llama.cpp server binary
-# Example:
-# extraArgs:
-#   - "-m"
-#   - "/models/model.gguf"
-#   - "-c"
-#   - "4096"
-#   - "-t"
-#   - "4"
-#   - "--port"
-#   - "8080"
-#   - "--host"
-#   - "0.0.0.0"
 extraArgs: []
 
 # Shared models volume
@@ -81,5 +87,3 @@ initDownloader:
     repository: curlimages/curl
     tag: "8.10.1"
     pullPolicy: IfNotPresent
-
-

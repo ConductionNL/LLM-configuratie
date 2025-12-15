@@ -18,6 +18,9 @@ All notable changes to this repository will be documented in this file.
   - Default rolling update: `maxUnavailable: 0`, `maxSurge: 1`
   - For dolphin and mistral values: `maxUnavailable: 1`, `maxSurge: 0` to avoid surge on single LLM node
   - Increased `progressDeadlineSeconds` to 1800 to accommodate large model downloads
+- Chart defaults update
+  - `infra/apps/llm/charts/llama-cpp/values.yaml`: added default `nodeSelector: role=llm`, `tolerations` for `llm-only`, and anti-affinity example to co-locate cleanly on LLM nodes
+  - Image repository updated per environment to a reachable registry; tag remains `server`
 - Documentation
   - Root `README.md` with overview and quick start
   - `docs/README.md` with in-cluster/external access, operations alignment, secrets rotation, and generic DB primary/secondary guidance
