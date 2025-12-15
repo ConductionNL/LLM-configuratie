@@ -1,4 +1,6 @@
-# values.yaml - LLM chart (zorgt dat pods alleen op role=llm gepland worden)
+# values.yaml - LLM chart
+# Doel: pods alleen op de LLM nodepool (Gardener) plannen
+
 replicaCount: 1
 
 strategy:
@@ -24,10 +26,13 @@ service:
 
 podAnnotations: {}
 
-# --- Scheduling / isolation (belangrijk voor exclusieve llm nodes) ---
+# --- Scheduling / isolation ---
+# Jouw nodes hebben o.a. label: worker.gardener.cloud/pool=llm
 nodeSelector:
-  role: llm
+  worker.gardener.cloud/pool: llm
 
+# Alleen nodig als je nodes ook echt tainted zijn met: llm-only=true:NoSchedule
+# (nu hebben je nodes géén taints, dus dit is optioneel)
 tolerations:
   - key: "llm-only"
     operator: "Equal"
@@ -44,11 +49,10 @@ affinity:
               values:
                 - llm
         topologyKey: "kubernetes.io/hostname"
-# ---------------------------------------------------------------
+# -----------------------------
 
-# Resources: laat leeg of stel realistische values in
+# Resources: zet hier straks realistische requests/limits neer zodat autoscaling/scheduling voorspelbaar wordt
 resources: {}
-  # Voorbeeld suggestie (activeer indien gewenst):
   # requests:
   #   cpu: "2000m"
   #   memory: "4Gi"
