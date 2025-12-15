@@ -1,7 +1,8 @@
 replicaCount: 1
 
 nodeSelector:
-  role: "llm"
+  worker.gardener.cloud/pool: llm
+
 
 tolerations:
   - key: "llm-only"

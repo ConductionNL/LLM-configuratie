@@ -7,7 +7,8 @@ strategy:
     maxSurge: 0
 
 nodeSelector:
-  role: "llm"
+  worker.gardener.cloud/pool: llm
+
 
 tolerations:
   - key: "llm-only"
